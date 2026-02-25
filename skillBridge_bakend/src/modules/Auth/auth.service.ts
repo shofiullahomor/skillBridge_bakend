@@ -2,6 +2,9 @@
 import { prisma } from "../../lib/prisma";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+
+export const secret = "khsdofhusdhfr9985kj"
+
 const createUserIntoDB = async (payload:any) =>{
     const hashPassword = await bcrypt.hash(payload.password, 8)
     const result = await prisma.user.create({
@@ -21,6 +24,10 @@ const loginUserIntoDB = async (payload:any) =>{
         throw new Error("User not found")
     }
 
+    const ispasswordMatched = await bcrypt.compare(payload.password, user.password )
+     if(!ispasswordMatched){
+        throw new Error("invalid credentials")
+    }
     const userData = {
         id: user.id,
         name: user.name,
@@ -28,7 +35,12 @@ const loginUserIntoDB = async (payload:any) =>{
         status: user.status,
         email: user.email
     }
-    const token = jwt.sign( userData, "",{ expiresIn: "1d"})
+    const token = jwt.sign( userData, secret,{ expiresIn: "1d"})
+
+    return {
+        token,
+        user, 
+    }
 }
 
 export const AuthService = {
